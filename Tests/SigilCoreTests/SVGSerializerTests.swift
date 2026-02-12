@@ -74,4 +74,105 @@ struct SVGSerializerTests {
         #expect(svg.contains("scale(1,-1)"))
         #expect(svg.contains("<path"))
     }
+
+    @Test("SVGDocument respects custom fill color")
+    func customFillColor() {
+        let doc = SVGDocument(
+            pathData: "M0,0L10,10Z",
+            bounds: CGRect(x: 0, y: 0, width: 10, height: 10),
+            fillColor: "#FF3B30"
+        )
+        let svg = doc.render()
+        #expect(svg.contains("fill=\"#FF3B30\""))
+        #expect(!svg.contains("currentColor"))
+    }
+}
+
+@Suite("SymbolSearch")
+struct SymbolSearchTests {
+    let symbols = [
+        "arrow.right",
+        "arrow.right.circle",
+        "arrow.right.circle.fill",
+        "arrow.left",
+        "arrow.left.circle",
+        "arrow.up.right",
+        "star.fill",
+        "heart.fill",
+        "cloud.fill",
+    ]
+
+    @Test("Single term matches all containing symbols")
+    func singleTerm() {
+        let results = SymbolSearch.search(terms: ["arrow"], in: symbols)
+        #expect(results.count == 6)
+        #expect(results.allSatisfy { $0.contains("arrow") })
+    }
+
+    @Test("Multiple terms require all to match")
+    func multipleTerms() {
+        let results = SymbolSearch.search(terms: ["arrow", "circle"], in: symbols)
+        #expect(results.count == 3)
+        #expect(results.allSatisfy { $0.contains("arrow") && $0.contains("circle") })
+    }
+
+    @Test("Exact component matches rank higher")
+    func exactComponentRanking() {
+        let results = SymbolSearch.search(terms: ["right"], in: symbols)
+        // "arrow.right" has an exact component match, should rank above "arrow.up.right"
+        #expect(results.first == "arrow.right")
+    }
+
+    @Test("No matches returns empty")
+    func noMatches() {
+        let results = SymbolSearch.search(terms: ["zzzzz"], in: symbols)
+        #expect(results.isEmpty)
+    }
+
+    @Test("Search is case insensitive")
+    func caseInsensitive() {
+        let results = SymbolSearch.search(terms: ["ARROW", "RIGHT"], in: symbols)
+        #expect(!results.isEmpty)
+        #expect(results.allSatisfy { $0.contains("arrow") && $0.contains("right") })
+    }
+}
+
+@Suite("CoreUICatalog")
+struct CoreUICatalogTests {
+    @Test("Loads catalog and lists symbols")
+    func listSymbols() throws {
+        let catalog = try CoreUICatalog()
+        let names = catalog.allSymbolNames()
+        #expect(names.count > 5000)
+        #expect(names.contains("star.fill"))
+        #expect(names.contains("heart.fill"))
+    }
+
+    @Test("Extracts vector path for known symbol")
+    func extractPath() throws {
+        let catalog = try CoreUICatalog()
+        let (path, bounds) = try catalog.vectorGlyphPath(name: "star.fill")
+        #expect(!path.isEmpty)
+        #expect(bounds.width > 0)
+        #expect(bounds.height > 0)
+    }
+
+    @Test("Throws for unknown symbol")
+    func unknownSymbol() throws {
+        let catalog = try CoreUICatalog()
+        #expect(throws: Symbol2SVGError.self) {
+            try catalog.vectorGlyphPath(name: "this.symbol.does.not.exist.ever")
+        }
+    }
+
+    @Test("Different weights produce different paths")
+    func weightsDiffer() throws {
+        let catalog = try CoreUICatalog()
+        let (_, lightBounds) = try catalog.vectorGlyphPath(
+            name: "star.fill", weight: .ultralight)
+        let (_, blackBounds) = try catalog.vectorGlyphPath(
+            name: "star.fill", weight: .black)
+        // Black weight should be wider than ultralight
+        #expect(blackBounds.width > lightBounds.width)
+    }
 }

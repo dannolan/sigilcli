@@ -10,14 +10,14 @@ Extract 8,000+ Apple system symbols as clean SVG vectors from the command line.
 
 ```
 brew tap dannolan/tools
-brew install sigil
+brew install sigilcli
 ```
 
 ### From source
 
 ```
-git clone https://github.com/dannolan/sigil.git
-cd sigil
+git clone https://github.com/dannolan/sigilcli.git
+cd sigilcli
 make install
 ```
 

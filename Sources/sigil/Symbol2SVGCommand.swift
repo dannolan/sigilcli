@@ -259,9 +259,17 @@ struct SigilCommand: ParsableCommand {
     ) throws -> (svg: String, width: Double, height: Double) {
         let (path, bounds) = try catalog.vectorGlyphPath(
             name: name, weight: weight, scale: scale, pointSize: CGFloat(pointSize))
-        let serializer = SVGSerializer(precision: precision)
+        // Flip Y in path data so SVG needs no transform
+        let serializer = SVGSerializer(precision: precision, flipY: true)
         let pathData = serializer.pathData(from: path)
-        let document = SVGDocument(pathData: pathData, bounds: bounds, fillColor: fillColor)
+        // Flipped viewBox: Y origin becomes -(originalY + height)
+        let flippedBounds = CGRect(
+            x: bounds.origin.x,
+            y: -(bounds.origin.y + bounds.height),
+            width: bounds.width,
+            height: bounds.height
+        )
+        let document = SVGDocument(pathData: pathData, bounds: flippedBounds, fillColor: fillColor)
         return (document.render(), Double(bounds.width), Double(bounds.height))
     }
 

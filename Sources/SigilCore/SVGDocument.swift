@@ -15,14 +15,13 @@ public struct SVGDocument {
     public func render() -> String {
         let width = bounds.width
         let height = bounds.height
-        // viewBox uses the path's bounding box origin and size
         let vbX = bounds.origin.x
         let vbY = bounds.origin.y
 
         return """
         <?xml version="1.0" encoding="UTF-8"?>
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="\(fmtVB(vbX)) \(fmtVB(vbY)) \(fmtVB(width)) \(fmtVB(height))" width="\(fmtVB(width))" height="\(fmtVB(height))">
-          <path d="\(pathData)" fill="\(fillColor)" transform="scale(1,-1) translate(0,\(fmtVB(-vbY - height)))"/>
+          <path d="\(pathData)" fill="\(fillColor)"/>
         </svg>
         """
     }

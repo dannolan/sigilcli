@@ -71,7 +71,7 @@ struct SVGSerializerTests {
         let svg = doc.render()
         #expect(svg.contains("viewBox=\"0 0 100 100\""))
         #expect(svg.contains("fill=\"currentColor\""))
-        #expect(svg.contains("scale(1,-1)"))
+        #expect(!svg.contains("transform"))
         #expect(svg.contains("<path"))
     }
 

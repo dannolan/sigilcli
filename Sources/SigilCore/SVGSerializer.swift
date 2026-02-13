@@ -3,9 +3,11 @@ import Foundation
 
 public struct SVGSerializer {
     public let precision: Int
+    public let flipY: Bool
 
-    public init(precision: Int = 3) {
+    public init(precision: Int = 3, flipY: Bool = false) {
         self.precision = precision
+        self.flipY = flipY
     }
 
     public func pathData(from cgPath: CGPath) -> String {
@@ -16,19 +18,19 @@ public struct SVGSerializer {
             switch element.type {
             case .moveToPoint:
                 let p = element.points[0]
-                components.append("M\(fmt(p.x)),\(fmt(p.y))")
+                components.append("M\(fmt(p.x)),\(fmtY(p.y))")
             case .addLineToPoint:
                 let p = element.points[0]
-                components.append("L\(fmt(p.x)),\(fmt(p.y))")
+                components.append("L\(fmt(p.x)),\(fmtY(p.y))")
             case .addQuadCurveToPoint:
                 let cp = element.points[0]
                 let p = element.points[1]
-                components.append("Q\(fmt(cp.x)),\(fmt(cp.y)) \(fmt(p.x)),\(fmt(p.y))")
+                components.append("Q\(fmt(cp.x)),\(fmtY(cp.y)) \(fmt(p.x)),\(fmtY(p.y))")
             case .addCurveToPoint:
                 let cp1 = element.points[0]
                 let cp2 = element.points[1]
                 let p = element.points[2]
-                components.append("C\(fmt(cp1.x)),\(fmt(cp1.y)) \(fmt(cp2.x)),\(fmt(cp2.y)) \(fmt(p.x)),\(fmt(p.y))")
+                components.append("C\(fmt(cp1.x)),\(fmtY(cp1.y)) \(fmt(cp2.x)),\(fmtY(cp2.y)) \(fmt(p.x)),\(fmtY(p.y))")
             case .closeSubpath:
                 components.append("Z")
             @unknown default:
@@ -37,6 +39,10 @@ public struct SVGSerializer {
         }
 
         return components.joined(separator: "")
+    }
+
+    private func fmtY(_ value: CGFloat) -> String {
+        fmt(flipY ? -value : value)
     }
 
     private func fmt(_ value: CGFloat) -> String {
